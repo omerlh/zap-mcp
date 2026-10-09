@@ -64,6 +64,13 @@ A browser session through the proxy (register, log in, search, add two items to 
 
 Grouping matters: an agent reading 63 raw alerts burns its context, and one reading 7 can triage them.
 
+## Triage skill
+
+Finding alerts is half the problem; the other half is a report people act on. The repo ships a triage skill that classifies each finding (real, noise, needs verification), rates it with the [OWASP Risk Rating Methodology](https://owasp.org/www-community/OWASP_Risk_Rating_Methodology) (likelihood x impact), and writes a structured report.
+
+- **Any MCP client:** use the `zap_triage_report` prompt.
+- **Claude Code skill:** `cp -r skills/zap-triage ~/.claude/skills/`
+
 ## Notes
 
 - Only point it at apps you are allowed to test.

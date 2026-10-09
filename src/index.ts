@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
 import { z } from "zod";
 
@@ -93,5 +94,16 @@ server.tool("zap_stop", "Stop and remove the ZAP container.", {}, async () => {
   await run("docker", ["rm", "-f", CONTAINER]).catch(() => {});
   return text("ZAP stopped.");
 });
+
+// The triage skill is also served as an MCP prompt, so any client gets it, not just Claude Code.
+const skill = readFileSync(new URL("../skills/zap-triage/SKILL.md", import.meta.url), "utf8").replace(/^---[\s\S]*?---\n/, "");
+server.prompt(
+  "zap_triage_report",
+  "Triage ZAP alerts with the OWASP Risk Rating Methodology and write a security report.",
+  { focus: z.string().optional().describe("Optional: what to emphasise, e.g. the checkout flow") },
+  ({ focus }) => ({
+    messages: [{ role: "user" as const, content: { type: "text" as const, text: `${skill}${focus ? `\n\nFocus: ${focus}` : ""}\n\nNow call zap_get_alerts and produce the report.` } }],
+  })
+);
 
 await server.connect(new StdioServerTransport());
