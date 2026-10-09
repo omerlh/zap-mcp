@@ -12,17 +12,21 @@ Three tools. That's the whole thing:
 
 The idea: the agent does the tedious part of security testing, the manual clicking around. It drives a real browser *through* ZAP, registering users, logging in, searching, filling baskets, and ZAP passively scans every request and response on the way. Then the agent reads the alerts and triages them. You can tell it what to focus on ("the checkout flow", "everything after login"). Nothing is attacked: there is no active scanning, so it is safe by default.
 
-## Setup
+## Quick start
 
-Requirements: Node 20+, Docker.
+Requirements: Node 20+ and Docker.
 
 ```bash
-git clone <this repo> && cd zap-mcp
-npm install && npm run build
-claude mcp add zap -- node "$PWD/dist/index.js"
+claude mcp add zap -- npx -y github:omerlh/zap-mcp
 ```
 
-For Cursor, add the same command under `mcpServers` in `.cursor/mcp.json`.
+That's it. Ask Claude to "start ZAP" and tell it what to test. For Cursor or any other MCP client, add the same command under `mcpServers`:
+
+```json
+{ "mcpServers": { "zap": { "command": "npx", "args": ["-y", "github:omerlh/zap-mcp"] } } }
+```
+
+The agent also needs a browser it can point at a proxy. [agent-browser](https://github.com/vercel-labs/agent-browser) works well (`npm i -g agent-browser && agent-browser install`).
 
 ## Example: test OWASP Juice Shop with Claude Code
 
