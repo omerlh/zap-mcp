@@ -95,15 +95,16 @@ server.tool("zap_stop", "Stop and remove the ZAP container.", {}, async () => {
   return text("ZAP stopped.");
 });
 
-// The triage skill is also served as an MCP prompt, so any client gets it, not just Claude Code.
-const skill = readFileSync(new URL("../skills/zap-triage/SKILL.md", import.meta.url), "utf8").replace(/^---[\s\S]*?---\n/, "");
-server.prompt(
-  "zap_triage_report",
-  "Triage ZAP alerts with the OWASP Risk Rating Methodology and write a security report.",
-  { focus: z.string().optional().describe("Optional: what to emphasise, e.g. the checkout flow") },
-  ({ focus }) => ({
-    messages: [{ role: "user" as const, content: { type: "text" as const, text: `${skill}${focus ? `\n\nFocus: ${focus}` : ""}\n\nNow call zap_get_alerts and produce the report.` } }],
-  })
-);
+// The skills are also served as MCP prompts, so any client gets them, not just Claude Code.
+const skillBody = (name: string) =>
+  readFileSync(new URL(`../skills/${name}/SKILL.md`, import.meta.url), "utf8").replace(/^---[\s\S]*?---\n/, "");
+const focusArg = { focus: z.string().optional().describe("Optional: what to emphasise, e.g. the checkout flow") };
+const prompt = (name: string, skill: string, description: string, closing: string) =>
+  server.prompt(name, description, focusArg, ({ focus }) => ({
+    messages: [{ role: "user" as const, content: { type: "text" as const, text: `${skillBody(skill)}${focus ? `\n\nFocus: ${focus}` : ""}\n\n${closing}` } }],
+  }));
+
+prompt("zap_triage_report", "zap-triage", "Triage ZAP alerts (PoC or GTFO, OWASP Risk Rating) and write a security report.", "Now call zap_get_alerts and produce the report.");
+prompt("zap_fix_loop", "zap-fix-loop", "For a coding agent: scan the running app, prove each finding, fix it, verify the fix, and prepare a PR.", "Start the app and begin the loop.");
 
 await server.connect(new StdioServerTransport());

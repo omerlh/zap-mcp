@@ -71,6 +71,10 @@ Finding alerts is half the problem; the other half is a report people act on. Th
 - **Any MCP client:** use the `zap_triage_report` prompt.
 - **Claude Code skill:** `cp -r skills/zap-triage ~/.claude/skills/`
 
+## Ready-made prompt: the full loop
+
+Security works best as part of how the team ships, not as an outsider handing over a list. The `zap_fix_loop` prompt (or the `skills/zap-fix-loop` skill) is for a coding agent working in your repo: run the app, scan it through ZAP, prove each finding, fix it on a branch, replay the proof to verify the fix, re-scan, and prepare a pull request with before/after proof. It never pushes until you say so, and only targets a local or test app.
+
 ## Notes
 
 - Only point it at apps you are allowed to test.
