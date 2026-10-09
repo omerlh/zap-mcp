@@ -66,7 +66,7 @@ Grouping matters: an agent reading 63 raw alerts burns its context, and one read
 
 ## Triage skill
 
-Finding alerts is half the problem; the other half is a report people act on. The repo ships a triage skill that classifies each finding (real, noise, needs verification), rates it with the [OWASP Risk Rating Methodology](https://owasp.org/www-community/OWASP_Risk_Rating_Methodology) (likelihood x impact), and writes a structured report.
+Finding alerts is half the problem; the other half is a report people act on. The repo ships a triage skill that follows a PoC-or-GTFO rule (it tries to reproduce each alert with a minimal, non-destructive request and drops what it cannot prove), rates what survives with the [OWASP Risk Rating Methodology](https://owasp.org/www-community/OWASP_Risk_Rating_Methodology) (likelihood x impact), and writes a structured report.
 
 - **Any MCP client:** use the `zap_triage_report` prompt.
 - **Claude Code skill:** `cp -r skills/zap-triage ~/.claude/skills/`
