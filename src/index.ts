@@ -15,6 +15,19 @@ let port = 8080;
 
 const text = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
 
+// Recover state if the MCP server restarted while the ZAP container kept running.
+async function attach() {
+  if (apiKey) return;
+  const { stdout } = await run("docker", ["inspect", CONTAINER, "--format", "{{json .Args}}|{{json .HostConfig.PortBindings}}"]).catch(() => {
+    throw new Error("ZAP is not running. Call zap_start first.");
+  });
+  const [args, ports] = stdout.trim().split("|");
+  const key = (JSON.parse(args) as string[]).find((a) => a.startsWith("api.key="));
+  if (!key) throw new Error("Could not recover ZAP API key. Call zap_start again.");
+  apiKey = key.slice("api.key=".length);
+  port = Number(Object.values(JSON.parse(ports) as Record<string, { HostPort: string }[]>)[0]?.[0]?.HostPort ?? 8080);
+}
+
 async function zap(path: string, params: Record<string, string> = {}) {
   const qs = new URLSearchParams({ ...params, apikey: apiKey });
   const res = await fetch(`http://127.0.0.1:${port}${path}?${qs}`);
@@ -59,6 +72,7 @@ server.tool(
     min_risk: z.enum(["Informational", "Low", "Medium", "High"]).default("Low"),
   },
   async ({ baseurl, min_risk }) => {
+    await attach();
     const order = ["Informational", "Low", "Medium", "High"];
     const data = await zap("/JSON/core/view/alerts/", baseurl ? { baseurl } : {});
     const alerts = (data.alerts as any[]).filter((a) => order.indexOf(a.risk) >= order.indexOf(min_risk));
